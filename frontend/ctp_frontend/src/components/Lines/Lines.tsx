@@ -14,6 +14,14 @@ const handleError = (error:number) =>{
     throw new Error(`Network error! Status: ${error}`)
 }
 
+/*const filterBusses: Line[] | null = (lines : Line[] | null) =>{
+    lines?.map((line) => {
+        if(line.route_type == 3){
+            return
+        }
+    })
+}*/
+
 
 
 const Lines = () =>{
@@ -48,10 +56,29 @@ const Lines = () =>{
         <>
 
             <div>
-                <div >
-                    <h3 className="font-bold text-2xl">Lines</h3>
+                <div>
+                    <h3 className="font-bold text-2xl mb-3 m-10 shadow-sm w-fit rounded-md p-2 ">Lines</h3>
                     <div className="m-10">
-                        {lines && <LineList lines={lines} />}
+                        <h3 className="font-bold text-2xl mb-3 shadow-sm w-fit rounded-md p-2 hover:bg-gray-50">Autobuze</h3>
+                        <div className="shadow-sm rounded-md p-2">
+                        {lines && <LineList lines={lines.filter((line) => line.route_type === 3)} />}
+                        </div>
+                    </div>
+                    <div className="m-10">
+                        <h3 className="font-bold text-2xl mb-3 shadow-sm w-fit rounded-md p-2 hover:bg-gray-50">
+                           Troleibuze
+                        </h3>
+                        <div className="shadow-sm rounded-md p-2">
+                        {lines && <LineList lines={lines.filter((line) => line.route_type === 11) }/>}
+                        </div>
+                    </div>
+                    <div className="m-10">
+                        <h3 className="font-bold text-2xl mb-3 shadow-sm w-fit rounded-md p-2 hover:bg-gray-50">
+                            Tramvaie
+                        </h3>
+                        <div className="shadow-sm rounded-md p-2">
+                        {lines && <LineList lines={lines.filter((line)=> line.route_type === 0)}/>}
+                        </div>
                     </div>
 
 

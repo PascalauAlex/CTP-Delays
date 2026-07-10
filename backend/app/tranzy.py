@@ -1,5 +1,6 @@
 import httpx
 
+
 from .config import settings
 
 
@@ -27,6 +28,21 @@ class TranzyClient:
 
     async def aclose(self) -> None:
         await self._client.aclose()
+
+    async def get_trips(self)-> list[dict]:
+        resp = await self._client.get('/trips')
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_stops(self)-> list[dict]:
+        resp = await self._client.get('/stops')
+        resp.raise_for_status()
+        return resp.json()
+
+    async def get_stop_times(self)->list[dict]:
+        resp = await self._client.get('/stop_times')
+        resp.raise_for_status()
+        return resp.json()
 
     def __repr__(self):
         return f"TranzyClient()"

@@ -6,10 +6,11 @@ from sqlalchemy.dialects.postgresql import insert
 
 from .config import settings
 from .database import SessionLocal
-from .models import Route, VehiclePosition
+from .models import Route, VehiclePosition,Trips,Stops,StopTimes
 from .tranzy import TranzyClient
 
 log = logging.getLogger("poller")
+CHUNK = 1000
 
 
 def _parse_ts(value: str | int | None) -> datetime | None:
@@ -81,6 +82,89 @@ async def poll_vehicles_once(client: TranzyClient) -> None:
         await session.commit()
     log.info("Inserted up to %d positions", len(rows))
 
+async def pool_trips_once(client:TranzyClient) ->None:
+    trips = await client.get_trips()
+    rows = []
+    for t in trips:
+
+        rows.append(
+            {
+                "direction_id":t.get("direction_id"),
+                "route_id":t.get("route_id"),
+                "trip_id":t.get("trip_id"),
+                "trip_headsign":t.get("trip_headsign"),
+                "block_id":t.get("block_id"),
+                "shape_id":t.get("shape_id"),
+                "wheelchair_accessible":t.get("wheelchair_accessible"),
+                "bikes_allowed":t.get("bikes_allowed")
+            }
+        )
+    if not rows:
+        log.warning("No usable trip in this poll ")
+        return
+    stmt = insert(Trips).values(rows)
+    stmt =stmt.on_conflict_do_nothing()
+    async with SessionLocal() as session:
+        await session.execute(stmt)
+        await session.commit()
+    log.info("Inserted up to %d trips",len(rows))
+
+async def pool_stops_once(client:TranzyClient) -> None:
+    stops = await client.get_stops()
+    rows = []
+    for s in stops:
+        rows.append({
+            "stop_id":s.get("stop_id"),
+            "stop_name":s.get("stop_name"),
+            "stop_desc":s.get("stop_desc"),
+            "stop_lat":s.get("stop_lat"),
+            "stop_lon":s.get("stop_lon"),
+            "location_type":s.get("location_type"),
+            "stop_code":s.get("stop_code")
+        })
+
+    if not rows:
+        log.warning("No usable stops in this pool")
+        return
+    stmt = insert(Stops).values(rows)
+    stmt = stmt.on_conflict_do_nothing()
+    async with SessionLocal() as session:
+        await session.execute(stmt)
+        await session.commit()
+    log.info("Insert up to %d stops",len(rows))
+
+async def pool_stop_times_once(client:TranzyClient) -> None:
+    stop_times = await client.get_stop_times()
+    rows = []
+    for st in stop_times:
+        rows.append({
+            "trip_id":st.get("trip_id"),
+            "arrival_time":st.get("arrival_time"),
+            "departure_time":st.get("departure_time"),
+            "stop_id":st.get("stop_id"),
+            "stop_sequence":st.get("stop_sequence"),
+            "stop_headsign":st.get("stop_headsign"),
+            "pickup_type":st.get("pickup_type"),
+            "drop_off_type":st.get("drop_off_type"),
+            "shape_dist_traveled":st.get("shape_dist_traveled"),
+            "timepoint":st.get("timepoint")
+        })
+    if not rows:
+        log.warning("No usable stop times in this pool")
+        return
+    async with SessionLocal() as session:
+        for i in range(0,len(rows),CHUNK):
+            chunk = rows[i:i+CHUNK]
+            stmt = insert(StopTimes).values(chunk).on_conflict_do_nothing(
+                index_elements=['trip_id','stop_sequence']
+            )
+            await session.execute(stmt)
+        await session.commit()
+
+
+    log.info("Insert up to %d stop_times",len(stop_times))
+
+
 
 async def polling_loop(stop_event: asyncio.Event) -> None:
     client = TranzyClient()
@@ -93,6 +177,7 @@ async def polling_loop(stop_event: asyncio.Event) -> None:
         while not stop_event.is_set():
             try:
                 await poll_vehicles_once(client)
+                
             except Exception:
                 log.exception("Vehicle poll failed; will retry next cycle")
 
@@ -105,3 +190,4 @@ async def polling_loop(stop_event: asyncio.Event) -> None:
                 pass  # a expirat intervalul → următorul ciclu
     finally:
         await client.aclose()
+

@@ -68,6 +68,9 @@ async def latest_vehicles(
     return result.scalars().all()
 
 
+
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
