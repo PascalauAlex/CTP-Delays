@@ -1,11 +1,13 @@
 import type {Line} from "./Lines.tsx";
 import {useState} from "react";
+import {type NavigateFunction, useNavigate} from "react-router";
 
 
 
 
 const LineList = ({lines}:{lines : Line[]}) => {
     const [selected,setSelected] = useState<Line | null>(null);
+    const navigate:NavigateFunction = useNavigate()
 
     return (
         <div>
@@ -19,7 +21,9 @@ const LineList = ({lines}:{lines : Line[]}) => {
         </div>
             <div className="card bg-gray-100 mt-2 rounded-md flex-wrap w-1/3 border border-gray-200">
                 {selected && (
-                    <div className="card p-4  items-center gap-1 inline-flex w-full">
+                    <div className="card p-4  items-center gap-1 inline-flex w-full"
+                    onClick={()=>navigate(`/line/${selected.route_id}`)}
+                    >
                         <h4 className="bg-brand text-white rounded-md p-1">{selected.route_short_name}</h4>
                         <p className="bg-gray-300 font-semibold rounded-md p-1">{selected.route_long_name}</p>
 

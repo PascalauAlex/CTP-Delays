@@ -14,14 +14,6 @@ const handleError = (error:number) =>{
     throw new Error(`Network error! Status: ${error}`)
 }
 
-/*const filterBusses: Line[] | null = (lines : Line[] | null) =>{
-    lines?.map((line) => {
-        if(line.route_type == 3){
-            return
-        }
-    })
-}*/
-
 
 
 const Lines = () =>{

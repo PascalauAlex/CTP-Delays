@@ -7,6 +7,7 @@ import NotFound from "./components/Layout/NotFound.tsx";
 import Lines from "./components/Lines/Lines.tsx";
 import About from "./components/About.tsx";
 import Vehicles from "./components/Vehicles/Vehicles.tsx";
+import Line from "./components/Lines/Line.tsx";
 
 
 
@@ -19,7 +20,7 @@ function App() {
             <Route element={<Layout/>}>
                 <Route index element={<Home/>}/>
                 <Route path="lines" element={<Lines/>}/>
-                <Route path="lines/:lineId"/>
+                <Route path="line/:lineId" element={<Line/>}/>
                 <Route path="/vehicles" element={<Vehicles/>}/>
                 <Route path="about" element={<About/>}/>
             </Route>
